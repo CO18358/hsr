@@ -1,0 +1,288 @@
+\documentclass[ignorenonframetext,]{beamer}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+\usepackage{lmodern}
+\usepackage[british]{babel}
+\usepackage{amssymb,amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{pgfplots}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\newif\ifbibliography
+
+% Prevent slide breaks in the middle of a paragraph:
+\widowpenalties 1 10000
+\raggedbottom
+
+\AtBeginPart{
+  \let\insertpartnumber\relax
+  \let\partname\relax
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \let\insertsectionnumber\relax
+    \let\sectionname\relax
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \let\insertsubsectionnumber\relax
+  \let\subsectionname\relax
+  \frame{\subsectionpage}
+}
+
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+
+\title{Hidden Surface Removal}
+\author{André Grüning, University of Surrey}
+\date{\today}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Hidden Surface Removal}
+
+{[}from Kleinberg, Tardos: ``Algorithm Design'' (our textbook){]}
+
+\begin{block}{Background}
+
+\emph{Hidden Surface Removal} is a problem in Computer graphics that
+scarcely needs an introduction: when Woody is standing in front of Buzz,
+you should be able to see Woody but not Buzz; when Buzz is standing in
+front of Woody,\dots 
+
+\end{block}
+
+\end{frame}
+
+\begin{frame}
+
+\begin{block}{Elaboration}
+
+The magic of hidden surface removal is that you can often compute things
+faster than your intuition suggests. Here's a clean geometric example to
+illustrate a basic speed-up that can be achieved. You are given \(n\)
+nonvertical lines in the plane, labelled \(l_1, \dots l_n\) with the
+\(i\) line specified by \(l_i(x) := m_ix + b_i\). We will make the
+(simplifying) assumption that no three of the lines meet at a single
+point. We will also assume that no two lines have the same slope, ie $m_i \neq m_j, \forall i\neq j$.
+
+Which of the lines are visible by an observer high up in the \(y\)
+direction (and hence need to be rendered)?
+
+\begin{itemize}[<+->]
+\tightlist
+\item
+  We say that line \(l_i\) is \emph{uppermost} at a given
+  \(x\)-coordinate \(x_0\) if its \(y\)-coordinate is greater than
+  \(y\)-coordinates of all other lines at \(x_0\).
+\item
+  We say line \(l_i\) is \emph{visible} if there is some
+  \(x\)-coordinate at which it is uppermost -- intuitively some portion
+  of it can be seen if you look down from \(y \to \infty\).
+\end{itemize}
+
+\end{block}
+
+\end{frame}
+
+\begin{frame}
+
+\begin{block}{Our programme}
+
+\begin{itemize}[<+->]
+\tightlist
+\item
+  Understand the problem.
+\item
+  Try to find a brute force algorithm to gain a deeper understanding of the problem.
+ \item
+  Implementation: What data structure do we need to present a line?
+\item
+  Give an algorithm that takes \(n\) lines and in \(O(n\log n)\) time
+  returns all of the ones that are visible.
+\end{itemize}
+
+\end{block}
+
+\end{frame}
+
+\section{Understand the problem}
+
+\begin{frame}{Understand the problem}
+
+\begin{itemize}
+    \item We draw a couple of lines to understand what it means to be uppermost and to be visible. 
+    \item (It's always good to try to find some visualisation to understand a new problem - and you should make that a habit.)
+\end{itemize}
+    
+Before proceeding from this point we all should have a good understanding of what being uppermost and being visible means and why this is related to Hidden Surface Removal. If not, draw a few more different arrangements of straight lines which are partially or fully obscured by others when viewed from the top of your figures
+\end{frame}
+
+\section{Brute Force}
+
+\begin{frame}{Brute Force Approach}
+
+Just take the problem literally:
+\begin{enumerate}
+    \item To be visible, a line must be uppermost at least one point.
+    \item Given a point $x_0$ a line is uppermost if it has the greatest $y$-coordinate.
+    \item So we need to check at all points $x$ in a given range which line is uppermost.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Brute Force Pseudocode}
+
+\begin{algorithm}[H]
+\caption{Removing Hidden Surfaces Brute Force}
+\begin{algorithmic}
+    \Procedure{CalcVisibleSurfaces}{$L$: list of lines, $R \subset \mathbf{R} $: interval of interest for rendering}
+    \State{$V = \emptyset$} \Comment{Set of visible lines}
+    \For{$x \in R$}
+    \State{$\text{uppermost} = \max\arg_{l \in L} l(y)$} \Comment{ $O(n)$ time}
+    \State{Add uppermost to $V$}
+    \EndFor
+    \EndFor
+    \Return{$V$}
+    \EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\begin{itemize}
+    \item Running time: Number of points in $R$ times O(n).
+    \item But what is the size of $R$? If $R$ is an interval then there are an infinite number of points. $\Rightarrow$ Infinite running time\footnote{Of course if we only have finite resolution screen to render for, $R$ is not an interval in $\mathbf(R)$, but a set of discrete points -- eg the $x$-coordinates of 4000 pixels (assuming the screen is 4000 pixels wide. But still: what if we want to calculate this for an arbitrary yet unkown resultion, or just -- as we are in this module -- want to know the answers in abstractu.}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Frame Title}
+    \begin{itemize}
+        \item Clearly, this brute force algorithms is not feasible.
+        \item Do we really need to calculate which line is uppermost at all $x \in R$?
+        \item Or is there a smaller set of somehow "special" points?
+        \begin{itemize}
+            \item Q: Can what is the uppermost line change at any point, or only at special points? And what happens between these points?
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\section{Refined Brute Force}
+\begin{frame}{Refined Brute Force}
+
+\begin{itemize}[<+->]
+    \item Observation: Uppermost line can only change at intersection points of any two lines.
+    \item Therefore at any point \emph{between} two intersections the uppermost line will not change.
+    \item Idea: Check only which is the uppermost line between any two intersections.\footnote{We could also check at the intersections points themselves, but that would need more case distinctions (why?)}
+    \item What would be the running time of this refined brute-force algorithm?
+        \begin{itemize}
+            \item For $n$ lines there are $O(n^2)$ intersections\footnote{To be more precise it is $ (n-1) + (n-2) + (n-3) + \cdots + 2 + 1 = \sum_{i = 1}^{i < n} i = \frac{(n-1)(n-2)}{2}$ intersections.}, and therefore also $O(n^2)$ intervals between two neighbouring intersections.
+            \item For each of these $O(n^2)$ intervals e need to pick a point to calculate the $y$ coordinate of $n$ lines.
+            \item[$\Rightarrow$] $n \times O(n^2) = O(n^3)$ steps.
+        \end{itemize}
+        \end{itemize}
+\end{frame}
+
+\begin{frame}{What is missing?}
+    What does this outline of the algorithm not specify?
+    \begin{itemize}
+        \item How to find the intervals.
+        \item That the intersection points need to be sorted.
+        \item Which point to choose in an interval.
+        \item \dots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Refined Brute Force Pseudocode}
+
+\begin{algorithm}[H]
+\caption{Refined Brute Force}
+\begin{algorithmic}
+    \Procedure{CalcVisibleSurfaces}{L: list of lines}
+    \State{$L$: list of $x$-coordinates of intersections}
+        \For{any pair of indices $i,j$ with $i < j$} \Comment{ $O(n^2)$} 
+        \State{Calculate the $x$-coordinate of intersection between $l_i$ and $l_j$}
+        \State{Add this $x$ to $L$}
+        \EndFor
+        \State{$V = []$: list of visible lines}
+        \State{Sort $L$ by increasing $x$} \Comment {$O(n^2\log n^2)$}
+        \For{pairs of adjacent $x_1,x_2$ in $L$} \Comment{$O(n^2)$}
+        \State{$x_0 = \frac{x_1 + x_2}{2}$}
+        \State{$visible = \max\arg_{l \in L} l(x_0)$}
+        \State{Add $visible$ to $V$}
+        \EndFor
+        \State{Remove duplicates from $V$} \Comment{$O(n \log n)$}
+    \EndProcedure
+\end{algorithmic}
+\end{algorithm}
+Note: The code does not depend on the size/length of the interval $R$ any longer.
+    
+\end{frame}
+
+\begin{frame}{Problems with this code}
+
+\begin{itemize}[<+->]
+    \item Is this code complete? 
+    \item Test it on a small example?
+    \item How do we remove duplicates?
+    \item Why do we take a list and remove duplicates, and not a set?
+\end{itemize}
+\end{frame}
+
+    
+\begin{frame}{Towards a fast algorithm}
+
+\begin{itemize}[<+->]
+    \item We got from the brute force algorithm to the refined algorithm by using geometric properties of the problems.
+    \item Can we find other properties of the problem that help reduce time complexity?
+    \item Do we really need to calculate the $y$-coordindates of \emph{all} lines at \emph{all} intersection points?
+    \item For both a Dynamic Programming approach or a Divide and Conquer approach\footnote{At this stage we don't know yet which of them could lead us to an algorithm for this problem.},
+    what would be any base cases?
+    \item Does it make sense to order the lines in a certain order? Which orders would be natural?
+\end{itemize}
+    
+\end{frame}
+
+\begin{frame}[fragile]{Three lines -- which are visible?}
+
+\begin{tikzpicture}%[>=latex]
+    \begin{axis}[
+    %with=6cm,
+    axis lines=middle,
+    grid,
+    grid style={densely dashed}, 
+    xlabel=\(x\), ylabel=\(y\),
+    every axis plot/.style={very thick},
+    ]
+    \addplot coordinates { (8,2) (-2,-3)};
+    \addplot coordinates { (-2,-2) (8,1)};
+    \addplot coordinates { (-2,2) (8,-1)};
+    \end{axis}
+\end{tikzpicture}
+    
+\end{frame}
+
+\end{document}
