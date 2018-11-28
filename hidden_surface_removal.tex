@@ -35,29 +35,32 @@
 \widowpenalties 1 10000
 \raggedbottom
 
-\AtBeginPart{
-  \let\insertpartnumber\relax
-  \let\partname\relax
-  \frame{\partpage}
-}
-\AtBeginSection{
-  \ifbibliography
-  \else
-    \let\insertsectionnumber\relax
-    \let\sectionname\relax
-    \frame{\sectionpage}
-  \fi
-}
-\AtBeginSubsection{
-  \let\insertsubsectionnumber\relax
-  \let\subsectionname\relax
-  \frame{\subsectionpage}
-}
+% \AtBeginPart{
+%   \let\insertpartnumber\relax
+%   \let\partname\relax
+%   \frame{\partpage}
+% }
+% \AtBeginSection{
+%   \ifbibliography
+%   \else
+%     \let\insertsectionnumber\relax
+%     \let\sectionname\relax
+%     \frame{\sectionpage}
+%   \fi
+% }
+% \AtBeginSubsection{
+%   \let\insertsubsectionnumber\relax
+%   \let\subsectionname\relax
+%   \frame{\subsectionpage}
+% }
 
 \setlength{\emergencystretch}{3em}  % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{0}
+
+\usepackage{sympytex}
+\usepackage{listings}
 
 \title{Hidden Surface Removal}
 \author{André Grüning, University of Surrey}
@@ -112,7 +115,7 @@ direction (and hence need to be rendered)?
 
 \end{frame}
 
-\begin{frame}
+\begin{frame}{Our programme}
 
 \begin{block}{Our programme}
 
@@ -149,34 +152,33 @@ Before proceeding from this point we all should have a good understanding of wha
 
 \begin{frame}{Brute Force Approach}
 
-Just take the problem literally:
-\begin{enumerate}
-    \item To be visible, a line must be uppermost at least one point.
-    \item Given a point $x_0$ a line is uppermost if it has the greatest $y$-coordinate.
-    \item So we need to check at all points $x$ in a given range which line is uppermost.
-\end{enumerate}
+  Just take the problem literally:
+  \begin{enumerate}
+  \item To be visible, a line must be uppermost at least one point.
+  \item Given a point $x_0$ a line is uppermost if it has the greatest $y$-coordinate.
+  \item So we need to check at all points $x$ in a given range which line is uppermost.
+  \end{enumerate}
 \end{frame}
 
 \begin{frame}{Brute Force Pseudocode}
 
-\begin{algorithm}[H]
-\caption{Removing Hidden Surfaces Brute Force}
-\begin{algorithmic}
-    \Procedure{CalcVisibleSurfaces}{$L$: list of lines, $R \subset \mathbf{R} $: interval of interest for rendering}
-    \State{$V = \emptyset$} \Comment{Set of visible lines}
-    \For{$x \in R$}
-    \State{$\text{uppermost} = \max\arg_{l \in L} l(y)$} \Comment{ $O(n)$ time}
-    \State{Add uppermost to $V$}
-    \EndFor
-    \EndFor
-    \Return{$V$}
-    \EndProcedure
-\end{algorithmic}
-\end{algorithm}
-\begin{itemize}
-    \item Running time: Number of points in $R$ times O(n).
-    \item But what is the size of $R$? If $R$ is an interval then there are an infinite number of points. $\Rightarrow$ Infinite running time\footnote{Of course if we only have finite resolution screen to render for, $R$ is not an interval in $\mathbf(R)$, but a set of discrete points -- eg the $x$-coordinates of 4000 pixels (assuming the screen is 4000 pixels wide. But still: what if we want to calculate this for an arbitrary yet unkown resultion, or just -- as we are in this module -- want to know the answers in abstractu.}
-\end{itemize}
+  \begin{algorithm}[H]
+    \caption{Removing Hidden Surfaces Brute Force}
+    \begin{algorithmic}
+      \Procedure{CalcVisibleSurfaces}{$L$: list of lines, $R \subset \mathbf{R} $: interval of interest for rendering}
+      \State{$V = \emptyset$} \Comment{Set of visible lines}
+      \For{$x \in R$}
+      \State{$\text{uppermost} = \max\arg_{l \in L} l(y)$} \Comment{ $O(n)$ time}
+      \State{Add uppermost to $V$}
+      \EndFor
+      \Return{$V$}
+      \EndProcedure
+    \end{algorithmic}
+  \end{algorithm}
+  \begin{itemize}
+  \item Running time: Number of points in $R$ times O(n).
+  \item But what is the size of $R$? If $R$ is an interval then there are an infinite number of points. $\Rightarrow$ Infinite running time\footnote{Of course if we only have finite resolution screen to render for, $R$ is not an interval in $\mathbf(R)$, but a set of discrete points -- eg the $x$-coordinates of 4000 pixels (assuming the screen is 4000 pixels wide. But still: what if we want to calculate this for an arbitrary yet unkown resultion, or just -- as we are in this module -- want to know the answers in abstractu.}
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Frame Title}
@@ -222,49 +224,134 @@ Just take the problem literally:
 \caption{Refined Brute Force}
 \begin{algorithmic}
     \Procedure{CalcVisibleSurfaces}{L: list of lines}
-    \State{$L$: list of $x$-coordinates of intersections}
+    \State{$I$: list of $x$-coordinates of intersections}
         \For{any pair of indices $i,j$ with $i < j$} \Comment{ $O(n^2)$} 
         \State{Calculate the $x$-coordinate of intersection between $l_i$ and $l_j$}
-        \State{Add this $x$ to $L$}
+        \State{Add this $x$ to $I$}
         \EndFor
         \State{$V = []$: list of visible lines}
-        \State{Sort $L$ by increasing $x$} \Comment {$O(n^2\log n^2)$}
-        \For{pairs of adjacent $x_1,x_2$ in $L$} \Comment{$O(n^2)$}
+        \State{Sort $I$ by increasing $x$} \Comment {$O(n^2\log n^2)$}
+        \For{pairs of adjacent $x_1,x_2$ in $I$} \Comment{$O(n^2)$}
         \State{$x_0 = \frac{x_1 + x_2}{2}$}
-        \State{$visible = \max\arg_{l \in L} l(x_0)$}
-        \State{Add $visible$ to $V$}
+        \State{$uppermost = \max\arg_{l \in L} l(x_0)$} \Comment{$O(n)$}
+        \State{Add $uppermost$ to $V$}
         \EndFor
         \State{Remove duplicates from $V$} \Comment{$O(n \log n)$}
+        \Return{V}
     \EndProcedure
 \end{algorithmic}
 \end{algorithm}
 Note: The code does not depend on the size/length of the interval $R$ any longer.
-    
 \end{frame}
 
 \begin{frame}{Problems with this code}
 
-\begin{itemize}[<+->]
+\begin{itemize}%[<+->]
     \item Is this code complete? 
-    \item Test it on a small example?
+      \begin{itemize}
+      \item Actually a corner case is missing from the code. Which?
+      \end{itemize}
+    \item Test it on a small example!
     \item How do we remove duplicates?
     \item Why do we take a list and remove duplicates, and not a set?
 \end{itemize}
 \end{frame}
 
-    
+\begin{frame}{Implemention of the refined brute force algorithm.}
+    We firstly need to think about the data structure to represent a
+    line $l(x) = mx+b$ in code. Fields for a line object are from the
+    above: 
+    \begin{itemize}
+    \item A line \emph{has} a slope $m$.
+    \item A line \emph{has} an offset $b$
+    \end{itemize}
+    and we need a line object to do the following functions:
+    \begin{itemize}
+    \item return its value $y = l(x)$ for a given point $x$: method with signature \texttt{y(x)}
+    \item return the $x$-coordinate of the intersection with another line: method with signature \texttt{intersection(Line other)}
+    \end{itemize}
+    The implementation of \texttt{y(x)} is straight forward. For
+    method \texttt{intersection} we need to know how to calculate
+    $x$-coordonate $x_0$ of the 
+    intersetion of two lines $l_1(x) = m_1x + b_1$ and $l_2(x) = m_2 +
+    b_2$. Basic algebra yields
+    \begin{equation}
+      x_0 = \frac{m_1 - m_2}{b_2 - b_1}
+    \end{equation}
+\end{frame}
+
+\begin{frame}{Data structure representing a line}
+
+\tiny
+\lstinputlisting[language=Python, breaklines=true, firstline=4,
+lastline=33 ]{HiddenSurfaceRemoval.py}
+\end{frame}
+
+\begin{frame}{Refined Brute Force -- Python implementation}
+\tiny
+\lstinputlisting[language=Python, breaklines=true, firstline=35,
+lastline=62 ]{HiddenSurfaceRemoval.py}
+\end{frame}
+
+\begin{frame}{Running the algorithm}
+
+We have now at least code that we can run on a set of straight lines
+in order to get a better idea of what geometric properites might mark
+the visibile lines.
+
+\begin{block}{Code to generate 100 random lines and run the algorithm}
+\tiny
+\lstinputlisting[language=Python, breaklines=true, firstline=157,
+lastline=167 ]{HiddenSurfaceRemoval.py}
+\end{block}
+\end{frame}
+
+\begin{sympyblock}
+  import HiddenSurfaceRemoval as hsr
+\end{sympyblock}
+
+
+
+\begin{frame}
+  This is what 100 random straight lines look like:
+  \begin{figure}
+    \caption{100 random straight lines}
+    \sympyplot{pL}
+    \centering
+  \end{figure}
+
+  
+\end{frame}
+
+
+
 \begin{frame}{Towards a fast algorithm}
 
 \begin{itemize}[<+->]
-    \item We got from the brute force algorithm to the refined algorithm by using geometric properties of the problems.
-    \item Can we find other properties of the problem that help reduce time complexity?
-    \item Do we really need to calculate the $y$-coordindates of \emph{all} lines at \emph{all} intersection points?
-    \item For both a Dynamic Programming approach or a Divide and Conquer approach\footnote{At this stage we don't know yet which of them could lead us to an algorithm for this problem.},
-    what would be any base cases?
-    \item Does it make sense to order the lines in a certain order? Which orders would be natural?
+    \item We got from the brute force algorithm to the refined
+      algorithm by using geometric properties of the problem. 
+    \item Can we find other properties of the problem that help reduce
+      time complexity? 
+    \item Do we really need to calculate the $y$-coordindates of
+      \emph{all} lines at \emph{all} intersection points? 
+    \item For both a Dynamic Programming approach or a Divide and
+      Conquer approach\footnote{At this stage we don't know yet which
+        of them could lead us to an algorithm for this problem.}, 
+      what would be any base cases?
+    \item Does it make sense to order the lines in a certain order?
+      Which orders would be natural? 
 \end{itemize}
-    
 \end{frame}
+
+\begin{frame}{The simplest cases}
+
+In search of what could be base cases for a recurive algorithms
+(either D\&C or Dynamic Progamming), it makes sense to look at the si
+
+  
+\end{frame}
+
+
 
 \begin{frame}[fragile]{Three lines -- which are visible?}
 
