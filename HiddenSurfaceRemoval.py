@@ -154,13 +154,9 @@ def hidden_surface_removel(L):
     return visible
 
 
-
-
-    
-            
-            
 # Python-equivalent of "main" method
-if __name__=="__main__":
+#if __name__=="__main__":
+def hundred_lines():
     # list of 100 random lines.
     L = [ Line(m=2*rnd.random()-1,b=2*rnd.random()-1) for _ in range(100)]
     # list of a just few lines for debugging
@@ -177,15 +173,17 @@ if __name__=="__main__":
     pL = sym.plot(*sL, show=False, line_color=0.0) 
     sV = [l.m*x+ l.b for l in visible]
     pV = sym.plot(*sV, show=False, line_color="red")
-    pL.show()
-    pV.show()
-    pL.extend(pV)
-    pL.show()
-
-
-
-    #sDC = 
+    #pL.show()
+    #pV.show()
+    #pL.extend(pV)
+    #pL.show()
     #pDC = su
+
+    #pA = sym.plot(0)
+    #pA.extend(pL)
+    #pA.extend(pV)
+
+    return pL, pV
 
 
     

@@ -306,24 +306,50 @@ lastline=167 ]{HiddenSurfaceRemoval.py}
 \end{block}
 \end{frame}
 
-\begin{sympyblock}
-  import HiddenSurfaceRemoval as hsr
-\end{sympyblock}
+
+
+\begin{frame}[fragile]{100 straight lines}
+
+  \begin{sympysilent}
+    import HiddenSurfaceRemoval as hsr
+    pL, pV = hsr.hundred_lines()
+  \end{sympysilent}
 
 
 
-\begin{frame}
   This is what 100 random straight lines look like:
   \begin{figure}
-    \caption{100 random straight lines}
-    \sympyplot{pL}
+    \caption{100 random straight lines. Which are visible?}
+    \sympyplot[width=\textwidth]{pL}
+    \centering
+  \end{figure}
+\end{frame}
+
+\begin{frame}{Visible Lines}
+
+  \begin{figure}
+    \caption{Visible lines among the random lines -- typically in the
+      order of 10. (Note: not all sections of these lines are visible.}
+    \sympyplot[width=\textwidth]{pV  }
     \centering
   \end{figure}
 
-  
 \end{frame}
 
+\begin{frame}[fragile]{Visible Lines}
 
+  \begin{sympysilent}
+    pL.extend(pV)
+  \end{sympysilent}
+
+  \begin{figure}
+    \caption{All lines with the visible ones in red.   On visual inspection, it appears the the lines with the steepest
+  positive or negative slope tend to be visibile. Perhaps that a cue
+  for a later fast algorithm?}
+    \sympyplot[width=\textwidth]{pL}
+    \centering
+  \end{figure}
+\end{frame}
 
 \begin{frame}{Towards a fast algorithm}
 
@@ -343,17 +369,23 @@ lastline=167 ]{HiddenSurfaceRemoval.py}
 \end{itemize}
 \end{frame}
 
-\begin{frame}{The simplest cases}
+\begin{frame}{The simplest cases -- 0 and 1 lines}
 
 In search of what could be base cases for a recurive algorithms
-(either D\&C or Dynamic Progamming), it makes sense to look at the si
+(either D\&C or Dynamic Progamming), it makes sense to look at the
+simplest cases:
 
-  
+\begin{itemize}
+\item No lines: then none are visibile
+\item 1 line: then it's also visibile
+\end{itemize}
+So these cases are fairly trivial.
 \end{frame}
 
+\begin{frame}{The simplest cases -- 2 lines}
 
-
-\begin{frame}[fragile]{Three lines -- which are visible?}
+Two lines: As we assume that no two lines are parallel, they must
+intersect somewhere, and are both visibile. So that's trivial as well.
 
 \begin{tikzpicture}%[>=latex]
     \begin{axis}[
@@ -366,10 +398,70 @@ In search of what could be base cases for a recurive algorithms
     ]
     \addplot coordinates { (8,2) (-2,-3)};
     \addplot coordinates { (-2,-2) (8,1)};
+    %\addplot coordinates { (-2,2) (8,-1)};
+    \end{axis}
+\end{tikzpicture}
+
+But we can perhaps learn something useful for later: To the left of
+the intersection point, the line with the smaller slope is uppermost
+and to the right of it the one with the greater slope.
+\end{frame}
+
+\begin{frame}[fragile]{Three lines -- which are visible?}
+
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \begin{tikzpicture}[scale=0.8]%[>=latex]
+        \begin{axis}[
+          % with=6cm,
+          axis lines=middle,
+          grid,
+          grid style={densely dashed}, 
+          xlabel=\(x\), ylabel=\(y\),
+          every axis plot/.style={very thick},
+          ]
+          \addplot coordinates { (8,2) (-2,-3)};
+          \addplot coordinates { (-2,-1.5) (8,1.5)};
+          \addplot coordinates { (-2,2) (8,-1)};
+        \end{axis}
+      \end{tikzpicture}
+      \caption{Three lines visible}
+  \end{column}
+  \pause
+  \begin{column}{0.5\textwidth}
+    
+    \centering
+    
+    \begin{tikzpicture}[scale=0.8]%[>=latex]
+      \begin{axis}[
+        % with=6cm,
+        axis lines=middle,
+        grid,
+        grid style={densely dashed}, 
+    xlabel=\(x\), ylabel=\(y\),
+    every axis plot/.style={very thick},
+    ]
+    \addplot coordinates { (8,2) (-2,-3)};
+    \addplot coordinates { (-2,-2) (8,1)};
     \addplot coordinates { (-2,2) (8,-1)};
     \end{axis}
 \end{tikzpicture}
-    
+\caption{Two lines visible}
+\end{column}
+\end{columns}
+We observe (by drawing many more arrangements of three lines):
+\scriptsize
+\begin{itemize}[<-+>]
+\item The lines with the greatest slope and the one with the smallest
+  slopes are always visible. Let's call them $L_0$ and $L_2$.
+\item The line $L_1$ with the middle slope is only visible if at the
+  intersection $I_{02}$ of $L_0$ and $L_2$ it is above this
+  intersection.\footnote{\tiny If $L_1$ is below $I_{02}$, then to the right of
+    $I_{02}$, $L_2$ is above it and due to its greater slope will
+    always be above. To the left of $I_{02}$, $L_0$ is above, and due
+    to its smaller (more negative slope) will always stay above it.}
+\end{itemize}
+
 \end{frame}
 
 \end{document}
