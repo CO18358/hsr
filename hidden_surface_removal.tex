@@ -177,7 +177,7 @@ Before proceeding from this point we all should have a good understanding of wha
   \end{algorithm}
   \begin{itemize}
   \item Running time: Number of points in $R$ times O(n).
-  \item But what is the size of $R$? If $R$ is an interval then there are an infinite number of points. $\Rightarrow$ Infinite running time\footnote{Of course if we only have finite resolution screen to render for, $R$ is not an interval in $\mathbf(R)$, but a set of discrete points -- eg the $x$-coordinates of 4000 pixels (assuming the screen is 4000 pixels wide. But still: what if we want to calculate this for an arbitrary yet unkown resultion, or just -- as we are in this module -- want to know the answers in abstractu.}
+  \item But what is the size of $R$? If $R$ is an interval then there are an infinite number of points. $\Rightarrow$ Infinite running time\footnote{Of course if we only have finite resolution screen to render for, $R$ is not an interval in $\mathbf(R)$, but a set of discrete points -- eg the $x$-coordinates of 4000 pixels (assuming the screen is 4000 pixels wide. But still: what if we want to calculate this for an arbitrary yet unknown resolution, or just -- as we are in this module -- want to know the answers in abstractu.}
   \end{itemize}
 \end{frame}
 
@@ -257,7 +257,7 @@ Note: The code does not depend on the size/length of the interval $R$ any longer
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Implemention of the refined brute force algorithm.}
+\begin{frame}{Implementation of the refined brute force algorithm.}
     We firstly need to think about the data structure to represent a
     line $l(x) = mx+b$ in code. Fields for a line object are from the
     above: 
@@ -272,8 +272,8 @@ Note: The code does not depend on the size/length of the interval $R$ any longer
     \end{itemize}
     The implementation of \texttt{y(x)} is straight forward. For
     method \texttt{intersection} we need to know how to calculate
-    $x$-coordonate $x_0$ of the 
-    intersetion of two lines $l_1(x) = m_1x + b_1$ and $l_2(x) = m_2 +
+    $x$-coordinate $x_0$ of the 
+    intersection of two lines $l_1(x) = m_1x + b_1$ and $l_2(x) = m_2 +
     b_2$. Basic algebra yields
     \begin{equation}
       x_0 = \frac{m_1 - m_2}{b_2 - b_1}
@@ -296,8 +296,8 @@ lastline=62 ]{HiddenSurfaceRemoval.py}
 \begin{frame}{Running the algorithm}
 
 We have now at least code that we can run on a set of straight lines
-in order to get a better idea of what geometric properites might mark
-the visibile lines.
+in order to get a better idea of what geometric properties might mark
+the visible lines.
 
 \begin{block}{Code to generate 100 random lines and run the algorithm}
 \tiny
@@ -344,7 +344,7 @@ lastline=167 ]{HiddenSurfaceRemoval.py}
 
   \begin{figure}
     \caption{All lines with the visible ones in red.   On visual inspection, it appears the the lines with the steepest
-  positive or negative slope tend to be visibile. Perhaps that a cue
+  positive or negative slope tend to be visible. Perhaps that a cue
   for a later fast algorithm?}
     \sympyplot[width=\textwidth]{pL}
     \centering
@@ -358,7 +358,7 @@ lastline=167 ]{HiddenSurfaceRemoval.py}
       algorithm by using geometric properties of the problem. 
     \item Can we find other properties of the problem that help reduce
       time complexity? 
-    \item Do we really need to calculate the $y$-coordindates of
+    \item Do we really need to calculate the $y$-coordinates of
       \emph{all} lines at \emph{all} intersection points? 
     \item For both a Dynamic Programming approach or a Divide and
       Conquer approach\footnote{At this stage we don't know yet which
@@ -371,13 +371,13 @@ lastline=167 ]{HiddenSurfaceRemoval.py}
 
 \begin{frame}{The simplest cases -- 0 and 1 lines}
 
-In search of what could be base cases for a recurive algorithms
-(either D\&C or Dynamic Progamming), it makes sense to look at the
+In search of what could be base cases for a recursive algorithms
+(either D\&C or Dynamic Programming), it makes sense to look at the
 simplest cases:
 
 \begin{itemize}
-\item No lines: then none are visibile
-\item 1 line: then it's also visibile
+\item No lines: then none are visible
+\item 1 line: then it's also visible
 \end{itemize}
 So these cases are fairly trivial.
 \end{frame}
@@ -385,7 +385,7 @@ So these cases are fairly trivial.
 \begin{frame}{The simplest cases -- 2 lines}
 
 Two lines: As we assume that no two lines are parallel, they must
-intersect somewhere, and are both visibile. So that's trivial as well.
+intersect somewhere, and are both visible. So that's trivial as well.
 
 \begin{tikzpicture}%[>=latex]
     \begin{axis}[
@@ -425,7 +425,7 @@ and to the right of it the one with the greater slope.
           \addplot coordinates { (-2,2) (8,-1)};
         \end{axis}
       \end{tikzpicture}
-      \caption{Three lines visible}
+      Three lines visible
   \end{column}
   \pause
   \begin{column}{0.5\textwidth}
@@ -446,7 +446,7 @@ and to the right of it the one with the greater slope.
     \addplot coordinates { (-2,2) (8,-1)};
     \end{axis}
 \end{tikzpicture}
-\caption{Two lines visible}
+Two lines visible
 \end{column}
 \end{columns}
 We observe (by drawing many more arrangements of three lines):
@@ -461,7 +461,85 @@ We observe (by drawing many more arrangements of three lines):
     always be above. To the left of $I_{02}$, $L_0$ is above, and due
     to its smaller (more negative slope) will always stay above it.}
 \end{itemize}
+\end{frame}
+
+
+\begin{frame}{What have we got so far?}
+
+  \begin{block}{What we have got so far.}
+    \begin{itemize}
+    \item The slope of the lines is important.
+    \item Lines with greatest and smallest slope are always visible
+      (namely far to the right or left).
+    \item The position of a line wrt to the intersection of others is
+      important (see case of 3 lines).
+    \item We can deal with 0,1,2,3 lines already.
+    \end{itemize}
+  \end{block}
+  \pause
+  \begin{block}{Approach}
+    From the above we
+    \begin{itemize}
+    \item Sort lines by increasing slope.
+    \item Try a D\&C approach with 0,1,2,3 lines as base case
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+
+\begin{frame}{Nascent Algorithm}
+  \footnotesize
+
+  \begin{block}{Follow the D\&C template:}
+    % \begin{algorithm}{H}
+    %   \caption{Nascent Algorithm D\&C}
+    \begin{algorithmic}
+      \State{Sort list of lines $L$ by slope $m$, such that $l_0,l_1,\dots l_{n-1} \in
+        L$ with $m_0 < m_1 < m_2 <  \cdots < m_{n-1}$.}
+      \Procedure{D\&C}{$L$: list of $n$ lines}
+      If{$n < 4$}
+      \State{Deal with the base cases $n=0,1,2,3$ to get set of visible lines $V$.}
+      \State{\Return{set of visible lines: $V$}}
+      \EndIf
+      \State{split $L$ into \texttt{Left} and \texttt{Right} halves}
+      \State{visible $V_{left} =$ \Call{D\&C}{\texttt{Left}}}
+      \State{visible $V_{right} =$ \Call{D\&C}{\texttt{Right}}}
+      \State{Somehow merge the separate sets {$V_{left}, V_{right}$}
+        into one set $V$.}
+      \State{\Return{set of visible lines $V$}}
+      \EndProcedure
+    \end{algorithmic}
+    % \end{algorithm}
+  \end{block}
+\pause
+  \begin{block}{Big question}
+    How do we merge $V_{left}, V_{right}$, and determine whether any
+    lines in $V_{left}$ occlude any lines in $V_{right}$ and vice-versa?
+  \end{block}
+\end{frame}
+
+\begin{frame}{Nascent Merging of set of visible lines}
+
+  Let us call the nascent function \textsc{MergeVisible}.
+
+  \begin{block}{What we know about \textsc{MergeVisible}}
+    \begin{itemize}
+    \item It will take two (sorted!) lists \texttt{Left} and
+      \texttt{Right} of visible lines as input. 
+    \item It must return a (sorted!) list $V$ of the jointly visible
+      lines from \texttt{Left} and \texttt{Right}.
+    \item All lines in \texttt{Right} are steeper than any line in
+      \texttt{Left} because they were sorted before the split.
+    \end{itemize}
+  \item The first line (with the smallest slope) in \texttt{Left} will
+    be visible, as will the last line (with the greatest slope in \texttt{Right}.
+  \end{block}
+
+  We should probably make some observations on how a set of visible lines
+  (eg from \texttt{Left}) does or does not get occluded by a line that
+  has a greater slope (eg one from \texttt{Right}).
 
 \end{frame}
+  
 
 \end{document}
