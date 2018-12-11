@@ -168,7 +168,7 @@ Before proceeding from this point we all should have a good understanding of wha
       \Procedure{CalcVisibleSurfaces}{$L$: list of lines, $R \subset \mathbf{R} $: interval of interest for rendering}
       \State{$V = \emptyset$} \Comment{Set of visible lines}
       \For{$x \in R$}
-      \State{$\text{uppermost} = \max\arg_{l \in L} l(y)$} \Comment{ $O(n)$ time}
+      \State{$\text{uppermost} = \max\arg_{l \in L} l(y)$  \Comment{ $O(n)$ time}}
       \State{Add uppermost to $V$}
       \EndFor
       \Return{$V$}
@@ -225,7 +225,7 @@ Before proceeding from this point we all should have a good understanding of wha
 \begin{algorithmic}
     \Procedure{CalcVisibleSurfaces}{L: list of lines}
     \State{$I$: list of $x$-coordinates of intersections}
-        \For{any pair of indices $i,j$ with $i < j$} \Comment{ $O(n^2)$} 
+        \For{any pair of indices $i,j$ with $i < j$} \State{\Comment{ $O(n^2)$}}
         \State{Calculate the $x$-coordinate of intersection between $l_i$ and $l_j$}
         \State{Add this $x$ to $I$}
         \EndFor
@@ -312,7 +312,7 @@ lastline=167 ]{HiddenSurfaceRemoval.py}
 
   \begin{sympysilent}
     import HiddenSurfaceRemoval as hsr
-    pL, pV = hsr.hundred_lines()
+    pL, pV, pR, visible = hsr.hundred_lines()
   \end{sympysilent}
 
 
@@ -438,16 +438,16 @@ and to the right of it the one with the greater slope.
         axis lines=middle,
         grid,
         grid style={densely dashed}, 
-    xlabel=\(x\), ylabel=\(y\),
-    every axis plot/.style={very thick},
-    ]
-    \addplot coordinates { (8,2) (-2,-3)};
-    \addplot coordinates { (-2,-2) (8,1)};
-    \addplot coordinates { (-2,2) (8,-1)};
-    \end{axis}
-\end{tikzpicture}
-Two lines visible
-\end{column}
+        xlabel=\(x\), ylabel=\(y\),
+        every axis plot/.style={very thick},
+        ]
+        \addplot coordinates { (8,2) (-2,-3)};
+        \addplot coordinates { (-2,-2) (8,1)};
+        \addplot coordinates { (-2,2) (8,-1)};
+      \end{axis}
+    \end{tikzpicture}
+    Two lines visible
+  \end{column}
 \end{columns}
 We observe (by drawing many more arrangements of three lines):
 \scriptsize
@@ -487,36 +487,36 @@ We observe (by drawing many more arrangements of three lines):
 \end{frame}
 
 
-\begin{frame}{Nascent Algorithm}
-  \footnotesize
+\begin{frame}{Follow the D\&C template}
 
-  \begin{block}{Follow the D\&C template:}
-    % \begin{algorithm}{H}
-    %   \caption{Nascent Algorithm D\&C}
+  \begin{algorithm}[H]
+    \caption{Nascent Algorithm D\&C}
     \begin{algorithmic}
-      \State{Sort list of lines $L$ by slope $m$, such that $l_0,l_1,\dots l_{n-1} \in
+      \footnotesize
+
+     \State{Sort list of lines $L$ by slope $m$, such that $l_0,l_1,\dots l_{n-1} \in
         L$ with $m_0 < m_1 < m_2 <  \cdots < m_{n-1}$.}
       \Procedure{D\&C}{$L$: list of $n$ lines}
-      If{$n < 4$}
-      \State{Deal with the base cases $n=0,1,2,3$ to get set of visible lines $V$.}
-      \State{\Return{set of visible lines: $V$}}
+      \If{$n < 4$}
+     \State{Deal with the base cases $n=0,1,2,3$ to get set of visible lines $V$.}
+     \State{\Return{set of visible lines: $V$}}
       \EndIf
       \State{split $L$ into \texttt{Left} and \texttt{Right} halves}
       \State{visible $V_{left} =$ \Call{D\&C}{\texttt{Left}}}
       \State{visible $V_{right} =$ \Call{D\&C}{\texttt{Right}}}
       \State{Somehow merge the separate sets {$V_{left}, V_{right}$}
         into one set $V$.}
-      \State{\Return{set of visible lines $V$}}
+     \State{\Return{set of visible lines $V$}}
       \EndProcedure
     \end{algorithmic}
-    % \end{algorithm}
-  \end{block}
-\pause
-  \begin{block}{Big question}
-    How do we merge $V_{left}, V_{right}$, and determine whether any
-    lines in $V_{left}$ occlude any lines in $V_{right}$ and vice-versa?
-  \end{block}
-\end{frame}
+    \end{algorithm}
+    \pause
+    \footnotesize
+    \begin{block}{Big question}
+      How do we merge $V_{left}, V_{right}$, and determine whether any
+      lines in $V_{left}$ occlude any lines in $V_{right}$ and vice-versa?
+    \end{block}
+  \end{frame}
 
 \begin{frame}{Nascent Merging of set of visible lines}
 
@@ -530,16 +530,379 @@ We observe (by drawing many more arrangements of three lines):
       lines from \texttt{Left} and \texttt{Right}.
     \item All lines in \texttt{Right} are steeper than any line in
       \texttt{Left} because they were sorted before the split.
+    \item The first line (with the smallest slope) in \texttt{Left} will
+      be visible, as will the last line (with the greatest slope in \texttt{Right}.
     \end{itemize}
-  \item The first line (with the smallest slope) in \texttt{Left} will
-    be visible, as will the last line (with the greatest slope in \texttt{Right}.
   \end{block}
 
   We should probably make some observations on how a set of visible lines
   (eg from \texttt{Left}) does or does not get occluded by a line that
-  has a greater slope (eg one from \texttt{Right}).
+  has a greater slope (eg one from \texttt{Right}). Can lines from
+  \texttt{Right} also be occluded by lines from \texttt{Left}?
+\end{frame}
+
+
+\begin{frame}[fragile]{Properties of sets of visible lines}
+
+  Perhaps we should think about exactly which piece of a line is
+  visible, and therefore which piece should be rendered (we can compute these based on our set of visibiles from the refined brute force algorithm)
+
+  \begin{sympysilent}
+    pV.extend(pR)
+  \end{sympysilent}
+
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \begin{figure}[H]
+        \centering
+        \caption{Uppermost sections of the line (ie those section of a line that need to be rendered)}
+        \sympyplot[width=\textwidth]{pR}
+      \end{figure}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{figure}[H]
+        \centering
+
+      \caption{Uppermost sections of the line (ie those section of a line that need to be rendered)}
+      \sympyplot[width=\textwidth]{pV}
+    \end{figure}
+  \end{column}
+  \end{columns}
 
 \end{frame}
+
+\begin{frame}{Observations of the visible sectios of lines}
   
+  We make the following observation wrt to the intersection points of
+  the visibile lines:
+
+  \begin{block}{Observation}
+    Let $V = [l_1, l_2, \cdots, l_N]$ be the list of visible lines, ordered by increasing slope. 
+    Then the intersetion points $[x_i:  x_1 \text{is intersection of
+      $l_i$ and $l_{i+1}, i < N$}]$ have increasing $x$-coordinates.
+  \end{block}
+
+  \begin{block}{Proof}
+    If two lines are both visibile, the region where the one with the
+    smaller slope is visible must be to the left of the one with the greater
+    slope. Therefore $l_i$ is visible to the left of $x_i$ and
+    $l_{i+1}$ to the right of $x_i$. Similarly, $l_{i+1}$ is visible
+    to the left of $x_{i+1}$ and $l_{i+1}$ to the right of
+    $x_{i+1}$. Therefore $x_{i+1}$ must be to the right of $x_i$, ie
+    $x_i < x_{i+1}$.
+  \end{block}
+\end{frame}
+\begin{frame}
+  \frametitle{More Observations}
+  \begin{block}{Corollary}
+    For the lines in \texttt{Left}, $l_1$ is uppermost to the left of $x_1$, $l_N$ to the right of
+    $x_{N-1}$. Any other line $l_i, 1 < i < N-1$ is visible between
+    $x_{i-1}$ and $x_1$. (and analogously for the lines in \texttt{Right})
+  \end{block}
+
+  \begin{block}{Corollary}
+    The piecewise linear function given by the visible sections of
+    lines is convex up, as the next (ie to the right) visibile line
+    will have a greater slope. 
+  \end{block}
+\end{frame}
+
+
+\begin{frame}{How can two convex-up curves intersect?}
+
+  \begin{itemize}
+  \item 
+    Back to our D\&C algorithm and the question: Given two lists
+    \texttt{LEFT} and \texttt{RIGHT} of
+    visible lines (each ordered by slope) and such that the slope of the
+    \texttt{RIGHT} lines is always greater than those of \texttt{LEFT},
+    which ones are visible in the joint set of lines?
+  \item 
+    Perhaps it makes sense to look at how two convex-up shapes
+    \texttt{LEFT} and \texttt{RIGHT} can intersect where \texttt{RIGHT}
+    finishes with a slope that is greater than the one \texttt{LEFT} ended
+    with.
+  \item 
+    For visualising and experimenting with these shapes (do some
+    drawings of these convex shapes and their intersection). Ignore that
+    the lines are piecewise linear (ie have edges) for a while, and
+    look just at two smooth convex-up functions eg $\exp(-x)$ and $\exp(x)$ to which the
+    condition of the slopes applies, and shift these two functions
+    about.
+  \item 
+    In order to find the sections in which these curves are visible, we
+    need to find their intersection point $x_0$: The left convex-shape
+    is visible to left of this intersection point, and the right
+    convex-shape is visible to the right of this intersection.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Conclusions about the intersection of two convex-up curves}
+  
+  \begin{enumerate}
+  \item This intersection point is unique.
+  \item \texttt{LEFT} is visible to the left of the intersection point.
+  \item \texttt{RIGHT} is visible to the right of the intersection point.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Back to our piecewiese rendered curve}
+  \begin{itemize}
+  \item The argumentation for the smooth convex curves applies to any
+    concex curves, that is also for our piecewise linear curves
+    \texttt{LEFT} and \texttt{RIGHT} there is a unique intersection
+    point $x_0$, and left to it only sections of lines from \texttt{LEFT}
+    are visible, and right from it only sections of lines from
+    \texttt{RIGHT} are visible.
+  \item Therefore: need to find intersection point $x_0$ of
+    \texttt{LEFT} and \texttt{RIGHT}: all visibile lines in
+    \texttt{LEFT} that are uppermost to the left of $x_0$ are
+    visible, as are all lines in \texttt{RIGHT} that are uppermost to
+    the right of $x_0$
+  \item Therefore: discard all lines in \texttt{LEFT} right of $x_0$ that were
+    visible within \texttt{LEFT}, because they will be occluded by lines from \texttt{RIGHT}.
+  \item Therefore: discard all lines in \texttt{RIGHT} to the left of
+    $x_0$ that were visible in \texttt{RIGHT}, because they will be
+    occluded by lines from \texttt{LEFT}.
+  \end{itemize}
+  
+  \begin{block}{Task}
+    How to efficiently find $x_0$?
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  Situaion plotted here with 3 lines from each \texttt{LEFT} and
+  \texttt{RIGHT}.
+  \begin{figure}
+    \centering
+
+    \begin{tikzpicture}[scale=0.8]%[>=latex]
+    \begin{axis}[
+      % with=6cm,
+      axis lines=middle,
+      grid,
+      grid style={densely dashed}, 
+      xlabel=\(x\), ylabel=\(y\),
+      every axis plot/.style={very thick},
+      ]
+      \addplot[red] coordinates { (-1,2) (0,-3)};
+      \addplot[red] coordinates { (-1,1) (1,-3)};
+      \addplot[red] coordinates { (-1,0) (2,-3)};
+      \addplot[blue] coordinates { (2,2) (0,-3)};
+      \addplot[blue] coordinates { (2,1) (-1,-3)};
+      \addplot[blue] coordinates { (2,-1) (-2,-3)};
+    \end{axis}
+  \end{tikzpicture}
+
+\caption{In this case the third red line is intersection by the 2 blue line,
+  meaining that all lines from LEFT are still visibile, but only 2nd
+  and 3rd lines from \texttt{RIGHT}. Now imaging shifting the set of
+  blue lines about relative to the red lines, such that a different
+  number of them are visible: Eg shifting all blue lines right will
+  eventually make them all visible. Shifting them up, down, right will
+  lead to different result -- play through all the different
+  configuration that may occur.}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Procedure to find intersection $x_0$}
+
+  \begin{block}{Uppermost lines at any $x$}
+    \begin{itemize}
+    \item We observed earlier, that the uppermost line within \texttt{LEFT}
+      only changes at one of the intersection points $x_i$ of adjacent uppermost
+      lines, and then it changes from $l_i$ to $l_{i+1}$. 
+      So for each $x$ we can readly find which line is uppermost by
+      iterating through the $x_i$ in order until we have the first $x_i
+      > x$, then $l_i$ is the uppermost line at $x$. (This takes $O(n)$ time steps.)
+    \item Same procedure can be applied to \texttt{RIGHT}: for each
+      interval between its intersection points, we can determine which
+      line is uppermost by simply iterating through their intersection
+      points.
+    \item So we can find out for any given $x$ which line is uppermost
+      within $O(n)$ times steps from \texttt{LEFT} visible set and which is
+      uppermost from the \texttt{RIGHT} visible set (by iterating the
+      relevant intersection points.
+    \item Let's denote the intersection points of the visible lines from
+      th left set as $x_0,\cdots x_{K-2}$ if there are $K$ lines in the
+      \texttt{LEFT} set, and the intersection points of visible lines
+      from the RIGHT set with $J$ visible lines as $\xi_0, \cdots
+      \xi_{J-2}$.
+    \end{itemize}
+  \end{block}
+\end{frame}  
+
+\begin{frame}
+  \frametitle{First line from \texttt{LEFT} that is occluded by a line
+  from \texttt{RIGHT}}
+
+\begin{itemize}
+\item From our earlier reasoning about intersection points of up-convex
+  points, there is only one unique intersection $x_0$ between the visible section
+  of \texttt{LEFT} and \texttt{RIGHT} lines, and no lines of
+  \texttt{LEFT} are uppermost to the right of $x_0$:
+  \begin{itemize}
+  \item At the intersection $x_0$, two lines $l_i$ and $\lambda_j$
+    intersect (with as of yet unknown incides $i$ and $j$), but we can
+    say that no line $l_{i^*}$ with $i^* > i$ can be uppermost to the
+    left of $x_0$: By construction, $l_i$ is uppermost at $x_0$ (or
+    slightly left thereof), ie
+    higher than $l_{i^*}$, but also $\lambda_j$ is higher than $x_{i^*}$,
+    and due to the smaller slope of $x_{i^*}$ wrt to $\lambda_j$ it
+    will never be able to catch up with it to the right of $x_0$, ie
+    remain forever occuluded by $\lambda_j$.
+  \item However all lines $l_{i^-}$ with $i^- < i$ will remain visible
+    to the left of $x_0$ as they were before: The intersection point
+    $x_0$ is unique, and it lies to the left of the uppermost section
+    of any $l_{i^-}$. 
+  \end{itemize}
+  Therefore once we know $x_0$, and the index $i$ for the $l_i$ we
+  will be able to say exactly which lines from \texttt{LEFT} are
+  visible, namely $l_i$ and all $l_{i^-}$ with $i^- < i$. 
+\item ( A symmteric arigument for \texttt{RIGHT} shows that all lines
+  $\lambda_{j^+}$ with $j^+ \geq j$ will remain visible in the joint
+  set of \texttt{LEFT} and \texttt{RIGHT}.)
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Find $x_0$? Or rather $i,j$?}
+  \begin{itemize}
+  \item How can we find out the location of $x_0$ therefore? 
+  \item We probably don't need to know its exact location actually. 
+  \item It is enough if we now the index $i$ into \texttt{LEFT} (and likewise $j$
+    for \texttt{RIGHT}.
+  \item According to our argument that if $l_i$ is the line involved
+    in the intersection at $x_0$ with a line from \texttt{RIGHT}, the
+    intersection $x_i$ of $l_i$ and $l_{i+1}$ must be below the
+    uppermost line from \texttt{RIGHT} (otherwise a section of
+    $l_{i+1}$ would be visible.), but no line from \texttt{RIGHT} can
+    be higher than intersection of $x_{i-1}$  of $l_{i-1}$ and $l_i$
+    (otherwise $l_i$ would not be visible).
+  \item In other words: $x_i$ is the first intersection within
+    \texttt{LEFT} such that a line from \texttt{RIGHT} is uppermost at
+    this interseciton.
+  \item Therefore we will go through the $x_i$ in order, and for each
+    of the $x_i$ check where for the first time a line from \texttt{RIGHT} is higher at
+    $x_i$. If so, we have found our index $i$.
+  \item (Similarly we can iterate backwards through the $\xi_j$ and
+    find the $j$ where for the first time $\xi_j$ is lower than the
+    uppermost line in \texttt{LEFT}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Still Finding $i$}
+  In other words, it is important to find out for all intersection
+  points $x_i$ from \texttt{LEFT}, which line from \texttt{RIGHT} is
+  uppermost at this point.
+  \begin{itemize}
+  \item Finding out for a given $x$ which line from \texttt{RIGHT} is
+    uppermost takes $O(n)$ as argued before -- but we need to do this
+    for $O(n)$ intersection points from \texttt{LEFT}. 
+  \item This will take $O(n^2)$ time steps altogether, and by the
+    master theorem lead to a running time of $O(n^2)$ (use $a=2$,
+    $b=2$, and $c = 2$
+  \item This is better than the refined brute force approach with
+    $O(n^3)$.
+  \item But can we stil do better?
+  \end{itemize}
+  \begin{block}{Exercise}
+    Develop the pseudo-code for this algorithm. You will notice that
+    you will have to change the signature of \textsc{MergeVisible} so
+    that it not only returns the list of visible lines, but also the
+    list of their intersection in order, which is a by product of the
+    required calculations in \texttt{MergeVisible} so does not cost
+    any extra time in the sense of increasing the big-O time complexity.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Finding $i$ faster}
+
+  [TBD: The argument on this slides is to woolly and not precise]
+  \begin{itemize}
+  \item We haven't utilised the fact that both the $x_i$ and $\xi_j$
+    are ordered. 
+  \item Therefore for a given $x_i$ we only need to consider those
+    $\lambda_j$ with $\xi_j < x_i$. (Or similar -- this is only
+    correct up to +- 1 -- I need to make this argumet here precise and
+    agree with the later source code).
+  \item So in fact for $x_i$ we only need to consider those $\xi_j$ that we did
+    not already consider for $x_{i-1}$, ie those that are between
+    $x_{i-1}$ and $x_{i}$.
+  \item So we have two order lists of points $x_i$ and $\xi_j$
+    respectively and we need to deal with all $x_{i-1} < \xi_j < x_i$
+    before we can proceed to the next $x_{i+1}$.
+  \item This is faintly reminisence of the core idea of
+    \textsc{MergeSort} and \textsc{InversionCount} where we had to
+    deal with to sorted list, but could only deal with the remaining
+    smallest item in the one list when we had dealt with all smaller
+    items in the other list, where we could use up both lists in just
+    $O(n)$ time steps.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Finding $i$ fast with ideas from \textsc{MergeSort}}
+  
+  Core idea of going through the intersection points of both lists in
+  order. This is again a bit whooly, but the precises indices will
+  come from debugging the implemented pseudo-code:
+
+  So this is only a sketch:
+  \begin{itemize}
+  \item State with $i = 0$ and $j=0$.
+  \item Compare $x_i$ and $\xi_j$. 
+  \item If $x_i$ is lower than $x_j$, calculate $l_i(x_i)$, and comapre to height
+    of $lambda_{j}$ at $x_i$. If $\lambda_{j}$ is higher than $l_i()$
+    at this point, return $i$ -- the index of last visible line
+    in. Otherwise increase $i$.
+    \texttt{LEFT}.
+  \item If $x_j$ is lower than $x_i$, increase $j$.
+  \item Repeat from the compare step, until all indicies are exhausted.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Pseudocode for $O(n)$ \textsc{MergeVisible}}
+  \begin{algorithmic}
+    \Procedure{MergeVisible}{$V_L, V_R$: Lists of visible lines
+      separately for left and right halves, in order of increasing slope}
+    \EndProcedure
+  \end{algorithmic}
+\end{frame}
+
+\end{document}
+
+
+\item Also for each $x_i$ we know which line is uppermost in \texttt{LEFT}
+    and what its height is, namely $l_i(x_i) = l_{i+1}(x_i)$, but we
+    also know which lines is uppermost at this point in
+    \texttt{RIGHT}, say $k_j$. 
+  \item Similar to how ww dealt with the 3 lines (base?) case We can
+    now compare $y_{L} = l_i(x_i)$ and $y_{R} = k_j(x_i)$. 
+  \item If $y_{L} > y_{R}$, then $l_{i+1}$ is visible 
+  \item and if $l_{i+1}$ is visible, so will be all $l_s$ with $s <
+    i+1$, 
+  \item Can we conclude anything about $k_j$? $k_j$ is not visible
+    at $x_i$ and to the left of it, but might still become uppermost
+    to the right of it.
+  \item However $k_{j-1}$ is certainly not visible because at $x_i$ is
+    must be under $k_j$ (otherwise it would be the the uppermost in
+    \texttt{RIGHT} at $x_i$, and there it is also under $x_i$, and a
+    forteriori under all $x_s, s < i$ as $k_{j-1}$ due to the greater
+    slope (ie less negative) will decay faster to $-\infty$, than any
+    of $l_s, s \leq i$, ie also stay under $l_i$ and its predecessors.
+  \item If $y_{L} < y_{R}$ at $x_i$ this means that $k_j$ is visible at least to the
+    right of $x_i$, and with it all $k_r, r \geq j$ will also be visible.
+  \item Check whether I left some of the ones out, namely if
+    intersections from \texttt{LEFT} and \texttt{RIGHT} are not
+    alternating.
+  \item Clarification $x_0$ is intersection of the separately uppermost lines.
+  \end{itemize}
+\end{frame}
 
 \end{document}

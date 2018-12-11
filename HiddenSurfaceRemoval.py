@@ -25,7 +25,7 @@ class Line :
         :param other: another line
         :return: x-coordinate of the intersection
         """
-        return (self.m-other.m) / (other.b-self.b)
+        return (self.b-other.b) / (other.m-self.m)
 
     def __repr__(self):
         """Python-equivalent of the Java toString method
@@ -60,6 +60,67 @@ def refined_brute_force(L) :
         uppermost = max(L, key= lambda l: l.y(x)) # O(n) lines to go through.
         visible.add(uppermost) # best case: O(1), worst case O(n^2).
     return visible, poi
+
+def visible_intersections(V):
+    """
+    Render the visibile sections of a set of visible lines.
+    :param V: list of visible lines sorted by increasing slop.
+    :return: list of x-ordinate of insertion where index i is the
+    intersection between line i and line i+1 from V. 
+    """
+    print "V:", type(V), V
+    X = []
+    for i in range(len(V)-1):
+        x = V[i].intersection(V[i+1])
+        print i, x
+        X.append(x)
+    return X
+    
+    #return [ V[i].intersection(V[i+1]) for i in range(len(V)-1) ] # O(n)
+    
+def render_visible(V):
+    """
+    Render the visibile sections of a set of visible lines.
+    :param V: set of visible lines sorted by increasing slope.
+    :return
+    """
+
+    # make V into listed sorted by slope: O(n)
+    V = sorted(V, key=lambda l: l.m)
+
+    print V
+    X = visible_intersections(V)
+    print X
+
+    # add left end points lines to have a support point for the lines
+    # with smallest slope
+    X = [X[0]-5] + X
+
+    # Calculate the corresponding Y values:
+    Y = [ l.y(x) for l,x in zip(V,X)]
+
+    # and now a support point for the lines with greatest slope:
+    X.append( X[-1]+5 )
+    Y.append( V[-1].y(X[-1]) )
+
+    return X,Y
+
+
+def render_visible2(V):
+    """
+    Render the visibile sections of a set of visible lines.
+    :param V: set of visible lines sorted by increasing slope.
+    :return
+    """
+
+    # make V into listed sorted by slope: O(n)
+    V = sorted(V, key=lambda l: l.m)
+    X = visible_intersections(V)
+
+    x = sym.Symbol("x")
+    piecewise = [ (V[i].m*x + V[i].b, x < X[i]) for i in range(len(X))]
+    piecewise.append( (V[-1].m*x + V[-1].b, True) )
+    return piecewise
 
 def divide_and_conquer(L) :
     """
@@ -167,12 +228,16 @@ def hundred_lines():
     print "Visible: {} out of {}".format(str(len(visible)), str(len(L)))
     print "Range of x-coordinates of intersections:", poi[0], poi[-1]
 
+    render = render_visible2(visible)
+    p = sym.Piecewise(*render)
+    pR = sym.plot(p, line_color="red", show=False)
+
     # Hack to plot with sympy:
     x = sym.Symbol("x")
     sL = [l.m*x+ l.b for l in L]
-    pL = sym.plot(*sL, show=False, line_color=0.0) 
+    pL = sym.plot(*sL, show=False, line_color="black") 
     sV = [l.m*x+ l.b for l in visible]
-    pV = sym.plot(*sV, show=False, line_color="red")
+    pV = sym.plot(*sV, show=False, line_color="blue")
     #pL.show()
     #pV.show()
     #pL.extend(pV)
@@ -183,10 +248,11 @@ def hundred_lines():
     #pA.extend(pL)
     #pA.extend(pV)
 
-    return pL, pV
+    return pL, pV, pR, visible
 
 
-    
+if __name__=="__main__":
+    pL, pV, pR, visible = hundred_lines()
 
     
 
