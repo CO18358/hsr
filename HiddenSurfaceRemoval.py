@@ -65,34 +65,32 @@ def visible_intersections(V):
     """
     Render the visibile sections of a set of visible lines.
     :param V: list of visible lines sorted by increasing slop.
-    :return: list of x-ordinate of insertion where index i is the
+    :return: list of x-co-ordinates of intersections where index i is the
     intersection between line i and line i+1 from V. 
+
+    Note: by our mathematical consideration the returned X will be in
+    increasing order. 
     """
-    print "V:", type(V), V
     X = []
     for i in range(len(V)-1):
         x = V[i].intersection(V[i+1])
-        print i, x
         X.append(x)
     return X
-    
-    #return [ V[i].intersection(V[i+1]) for i in range(len(V)-1) ] # O(n)
+    # more pytonic:
+    # return [ V[i].intersection(V[i+1]) for i in range(len(V)-1) ] # O(n)
     
 def render_visible(V):
     """
     Render the visibile sections of a set of visible lines.
     :param V: set of visible lines sorted by increasing slope.
-    :return
+    :return X,Y: x and y between which to render a straight line.
     """
 
-    # make V into listed sorted by slope: O(n)
+    # make V into list sorted by slope: O(nlogn)
     V = sorted(V, key=lambda l: l.m)
-
-    print V
     X = visible_intersections(V)
-    print X
 
-    # add left end points lines to have a support point for the lines
+    # add point beyond left end point to have a support point for the line
     # with smallest slope
     X = [X[0]-5] + X
 
@@ -101,16 +99,15 @@ def render_visible(V):
 
     # and now a support point for the lines with greatest slope:
     X.append( X[-1]+5 )
-    Y.append( V[-1].y(X[-1]) )
-
+    Y.append( V[-1].y(X[-1]+5) )
     return X,Y
-
 
 def render_visible2(V):
     """
     Render the visibile sections of a set of visible lines.
     :param V: set of visible lines sorted by increasing slope.
-    :return
+    :return:
+    This is just a version of render_visible2 that can by plotted by sympy.
     """
 
     # make V into listed sorted by slope: O(n)
@@ -132,6 +129,7 @@ def divide_and_conquer(L) :
     V[i+1] if V is the list of visible lines also returned. 
     """
     n = len(L)
+    # Base Cases
     if n == 0: return L, []
     elif n == 1: return L, [] 
     elif n == 2:
@@ -144,74 +142,84 @@ def divide_and_conquer(L) :
             del L[1] # Big-Oh -- note [] is array list!
             return L, [x]
         else: # L[1] is visible and x0,x1 are in order (due to geometry)
-            x0 = L[0].intersection(L1)
-            x1 = L[1].intersection(L2)
+            x0 = L[0].intersection(L[1])
+            x1 = L[1].intersection(L[2])
             return L, [x0,x1]
 
+    # divide
     middle = len(L)//2
 
-    Left,iL = divide_and_conquer(L[:middle])
-    Right,iR = divide_and_conquer(L[middle:])
+    # get visible lines from LEFT and their intersections
+    Left, xL = divide_and_conquer(L[:middle])
 
-    j = 0
-    k = 0
+    # get visible lines from RIGHT and their intersections
+    Right, xR = divide_and_conquer(L[middle:])
 
-    while j < len(iL) and k < len(iR):
+    # indices into left and right halves
+    l = 0
+    r = 0
 
-        if iL[j] < iR[k] :
-            x = iL[j]
-            # at x and to the left of it, Left[j]) is uppermost in Left 
-            yV = Left[j].y(x)
-            # at x, Right[k] is uppermost in Right and to the left of iR[k]
-            yW = Right[k].y(x)
-            if yW > yV : # Right[k] is visible!
-                xx = Left[j].intersection(Right[k])
-                # xx must be to the left of iL[j] -- so Left[j+1] is covered by Right[k]
-                # and so are all lines in Left with indices greater than
-                # j+1: only lines Left[:j+1] visible.                # xx
-                # must be to the right of iR[k-1] -- so Right[k-1] is
-                # covered: only Right[k:] visible and lines with smaller
-                # index than k in Right 
-                visibile = Left[:j+1] + Right[k:]
-                # intersection j (and bigger) are covered by Right[k], 
-                intersections = iL[:j] + [xx] + iR[k:]
-                return visibile, intersections
-            else : j+= 1 
-        else : # iL[j] >= iR[k] -- in fact iL[j] > iR[k] as we excluded
-            # triple intersections
-            x = iR[k]
-            # at x and to its left, Right[k] is uppermost in Right 
-            yW = Right[k].y(x)
-            # at x (which is to the right of iL[j-1]), Left[j] is uppermost
-            yV = Left[j].y(x)
+    # find last visible line from LEFT:
+    while l < len(xL)-1 and r < len(xR)-1:
 
-            if yW > yV : # Right[k] is visible!
-                xx = Right[k].intersection(Left[j]) # ??
+        if xL[l] < xR[r]:
+            # at x and to the left of it, Left[l] is uppermost in Left:
+            x = xL[l]
 
-                # Left[j] is the last visible on the left side, and Right[k:]
-                # the first on the right side
-                visible = Left[:j+1] + [xx] + Right[k:]
-                intersection = iL[:j] + [xx] + iR[k:]
-                return visibile, intersections
-            else : k+= 1
+            # height of intersection point between Left[l] and
+            # Left[l+1]
+            yL = Left[l].y(x) 
+            
+            # x is left of xR[r], so Right[r] is uppermost in Right:
+            yR = Right[r].y(x)
 
-    # either iL or iR has been exhausted so far, so there are?
+            if yR > yL : # Right[r] is the first visible from Right!
+                x0 = Left[l].intersection(Right[r])
+                # x0 is to the left of xL[l] -- so Left[l+1] is
+                # covered by Right[k] and so are all other lines from
+                # Left with indices greater than l+1 as Right[k] is
+                # steeper than all of them.
+                # Therefore the visible lines from Left are:
+                VL = Left[:l+1]
+                # Remaining visible intersection points:
+                xLL = xL[:l]
+                # break # out of the while loop
+                VR = Right[r:]
+                xRR = xR[r:]
 
-    # Can this happen? I think not: At the latest the the last iR will
-    if j == len(iL) :
-        print "iL exhausted"
-    elif k == len(iR) :
-        print "iR exhausted. ie at none of the given intersection points is iR heigher than iL"
-        print 2# Test for intersection to the right of the last
-        # intersection point?"
-    else :
-        raise Exception("Go back to coding")
+                return VL + VR, xLL + [x0] + xRR
+                
+            else: # xL[i] wasn't the first point where LEFT is higher
+                # than RIGHT
+                l+=1
+        else: # xR[r] < xL[l] (and xL[l-1] < xR[r] < xR[r] -- we would
+            # not have increamented l-1 to l if not xL[l-1] < xR[r]
+            # at x and to the left of it Right[r] is uppermost in Right
+            x = xR[r]
+            yR = Right[r].y(x)
+            yL = Left[l].y(x)
+            if yL > yR: r+=1 # x is not the point where Right has
+            # become uppermost.
+            else: # Right has become uppermost for the first time, and
+                # hence will remain so at intersection r -- so Line r
+                # and steeper are visible
+                VR = Right[r:]
+                xRR = xL[r:]
+                VL = Left[:l+1]
+                xLL = xL[:l]
+                x0 = Left[l].intersection(Right[r])
+                return VL + VR, xLL + [x0] + xRR
 
-def hidden_surface_removel(L):
+    print "We should never have got here?"
+    x0 = Left[-1].intersection(Right[0])
+    return Left+Right, xL + [x0] + xR
+        
+
+def hidden_surface_removal(L):
     """Wrapper for the D&C implementation
     """
     L.sort(key=lambda l: l.m) # O(n log n)
-    visible,_ = divide_and_conquer(list(lines))
+    visible,_ = divide_and_conquer(list(L))
     return visible
 
 
@@ -219,9 +227,9 @@ def hidden_surface_removel(L):
 #if __name__=="__main__":
 def hundred_lines():
     # list of 100 random lines.
-    L = [ Line(m=2*rnd.random()-1,b=2*rnd.random()-1) for _ in range(100)]
+    #L = [ Line(m=2*rnd.random()-1,b=2*rnd.random()-1) for _ in range(100)]
     # list of a just few lines for debugging
-    # L = [ Line(-1,-2), Line(-2,-3), Line(-3,-5), Line(3,-1000)]
+    L = [ Line(-1,-2), Line(-2,-3), Line(-3,-5), Line(3,-1000)]
 
     visible, poi = refined_brute_force(L)
 
@@ -248,6 +256,15 @@ def hundred_lines():
     #pA.extend(pL)
     #pA.extend(pV)
 
+    visible2 = hidden_surface_removal(L)
+    visible3 = sorted(visible, key=lambda l:l.m)
+    
+    print visible3
+    print visible2
+    assert visible2 == visible3
+
+
+    
     return pL, pV, pR, visible
 
 

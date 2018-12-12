@@ -1,8 +1,10 @@
-\documentclass[ignorenonframetext,]{beamer}
+%\documentclass[ignorenonframetext,]{beamer}
+\documentclass{article}
+\usepackage{beamerarticle}
 \setbeamertemplate{caption}[numbered]
 \setbeamertemplate{caption label separator}{: }
 \setbeamercolor{caption name}{fg=normal text.fg}
-\beamertemplatenavigationsymbolsempty
+%\beamertemplatenavigationsymbolsempty
 \usepackage{lmodern}
 \usepackage[british]{babel}
 \usepackage{amssymb,amsmath}
@@ -545,7 +547,7 @@ We observe (by drawing many more arrangements of three lines):
 \begin{frame}[fragile]{Properties of sets of visible lines}
 
   Perhaps we should think about exactly which piece of a line is
-  visible, and therefore which piece should be rendered (we can compute these based on our set of visibiles from the refined brute force algorithm)
+  visible, and therefore which piece should be rendered (we can compute these based on our set of visible lines from the refined brute force algorithm)
 
   \begin{sympysilent}
     pV.extend(pR)
@@ -571,19 +573,19 @@ We observe (by drawing many more arrangements of three lines):
 
 \end{frame}
 
-\begin{frame}{Observations of the visible sectios of lines}
+\begin{frame}{Observations of the visible sections of lines}
   
   We make the following observation wrt to the intersection points of
-  the visibile lines:
+  the visible lines:
 
   \begin{block}{Observation}
     Let $V = [l_1, l_2, \cdots, l_N]$ be the list of visible lines, ordered by increasing slope. 
-    Then the intersetion points $[x_i:  x_1 \text{is intersection of
+    Then the intersection points $[x_i:  x_1 \text{is intersection of
       $l_i$ and $l_{i+1}, i < N$}]$ have increasing $x$-coordinates.
   \end{block}
 
   \begin{block}{Proof}
-    If two lines are both visibile, the region where the one with the
+    If two lines are both visible, the region where the one with the
     smaller slope is visible must be to the left of the one with the greater
     slope. Therefore $l_i$ is visible to the left of $x_i$ and
     $l_{i+1}$ to the right of $x_i$. Similarly, $l_{i+1}$ is visible
@@ -601,8 +603,8 @@ We observe (by drawing many more arrangements of three lines):
   \end{block}
 
   \begin{block}{Corollary}
-    The piecewise linear function given by the visible sections of
-    lines is convex up, as the next (ie to the right) visibile line
+    The piece-wise linear function given by the visible sections of
+    lines is convex up, as the next (ie to the right) visible line
     will have a greater slope. 
   \end{block}
 \end{frame}
@@ -625,7 +627,7 @@ We observe (by drawing many more arrangements of three lines):
   \item 
     For visualising and experimenting with these shapes (do some
     drawings of these convex shapes and their intersection). Ignore that
-    the lines are piecewise linear (ie have edges) for a while, and
+    the lines are piece-wise linear (ie have edges) for a while, and
     look just at two smooth convex-up functions eg $\exp(-x)$ and $\exp(x)$ to which the
     condition of the slopes applies, and shift these two functions
     about.
@@ -646,16 +648,16 @@ We observe (by drawing many more arrangements of three lines):
   \end{enumerate}
 \end{frame}
 
-\begin{frame}{Back to our piecewiese rendered curve}
+\begin{frame}{Back to our piece-wise rendered curve}
   \begin{itemize}
   \item The argumentation for the smooth convex curves applies to any
-    concex curves, that is also for our piecewise linear curves
+    convex curves, that is also for our piece-wise linear curves
     \texttt{LEFT} and \texttt{RIGHT} there is a unique intersection
     point $x_0$, and left to it only sections of lines from \texttt{LEFT}
     are visible, and right from it only sections of lines from
     \texttt{RIGHT} are visible.
   \item Therefore: need to find intersection point $x_0$ of
-    \texttt{LEFT} and \texttt{RIGHT}: all visibile lines in
+    \texttt{LEFT} and \texttt{RIGHT}: all visible lines in
     \texttt{LEFT} that are uppermost to the left of $x_0$ are
     visible, as are all lines in \texttt{RIGHT} that are uppermost to
     the right of $x_0$
@@ -672,7 +674,7 @@ We observe (by drawing many more arrangements of three lines):
 \end{frame}
 
 \begin{frame}
-  Situaion plotted here with 3 lines from each \texttt{LEFT} and
+  Situation plotted here with 3 lines from each \texttt{LEFT} and
   \texttt{RIGHT}.
   \begin{figure}
     \centering
@@ -696,7 +698,7 @@ We observe (by drawing many more arrangements of three lines):
   \end{tikzpicture}
 
 \caption{In this case the third red line is intersection by the 2 blue line,
-  meaining that all lines from LEFT are still visibile, but only 2nd
+  meaning that all lines from LEFT are still visible, but only 2nd
   and 3rd lines from \texttt{RIGHT}. Now imaging shifting the set of
   blue lines about relative to the red lines, such that a different
   number of them are visible: Eg shifting all blue lines right will
@@ -713,7 +715,7 @@ We observe (by drawing many more arrangements of three lines):
     \item We observed earlier, that the uppermost line within \texttt{LEFT}
       only changes at one of the intersection points $x_i$ of adjacent uppermost
       lines, and then it changes from $l_i$ to $l_{i+1}$. 
-      So for each $x$ we can readly find which line is uppermost by
+      So for each $x$ we can readily find which line is uppermost by
       iterating through the $x_i$ in order until we have the first $x_i
       > x$, then $l_i$ is the uppermost line at $x$. (This takes $O(n)$ time steps.)
     \item Same procedure can be applied to \texttt{RIGHT}: for each
@@ -744,14 +746,14 @@ We observe (by drawing many more arrangements of three lines):
   \texttt{LEFT} are uppermost to the right of $x_0$:
   \begin{itemize}
   \item At the intersection $x_0$, two lines $l_i$ and $\lambda_j$
-    intersect (with as of yet unknown incides $i$ and $j$), but we can
+    intersect (with as of yet unknown indices $i$ and $j$), but we can
     say that no line $l_{i^*}$ with $i^* > i$ can be uppermost to the
     left of $x_0$: By construction, $l_i$ is uppermost at $x_0$ (or
     slightly left thereof), ie
     higher than $l_{i^*}$, but also $\lambda_j$ is higher than $x_{i^*}$,
     and due to the smaller slope of $x_{i^*}$ wrt to $\lambda_j$ it
     will never be able to catch up with it to the right of $x_0$, ie
-    remain forever occuluded by $\lambda_j$.
+    remain forever occluded by $\lambda_j$.
   \item However all lines $l_{i^-}$ with $i^- < i$ will remain visible
     to the left of $x_0$ as they were before: The intersection point
     $x_0$ is unique, and it lies to the left of the uppermost section
@@ -760,7 +762,7 @@ We observe (by drawing many more arrangements of three lines):
   Therefore once we know $x_0$, and the index $i$ for the $l_i$ we
   will be able to say exactly which lines from \texttt{LEFT} are
   visible, namely $l_i$ and all $l_{i^-}$ with $i^- < i$. 
-\item ( A symmteric arigument for \texttt{RIGHT} shows that all lines
+\item ( A symmetric argument for \texttt{RIGHT} shows that all lines
   $\lambda_{j^+}$ with $j^+ \geq j$ will remain visible in the joint
   set of \texttt{LEFT} and \texttt{RIGHT}.)
 \end{itemize}
@@ -784,7 +786,7 @@ We observe (by drawing many more arrangements of three lines):
     (otherwise $l_i$ would not be visible).
   \item In other words: $x_i$ is the first intersection within
     \texttt{LEFT} such that a line from \texttt{RIGHT} is uppermost at
-    this interseciton.
+    this intersection.
   \item Therefore we will go through the $x_i$ in order, and for each
     of the $x_i$ check where for the first time a line from \texttt{RIGHT} is higher at
     $x_i$. If so, we have found our index $i$.
@@ -808,7 +810,7 @@ We observe (by drawing many more arrangements of three lines):
     $b=2$, and $c = 2$
   \item This is better than the refined brute force approach with
     $O(n^3)$.
-  \item But can we stil do better?
+  \item But can we still do better?
   \end{itemize}
   \begin{block}{Exercise}
     Develop the pseudo-code for this algorithm. You will notice that
@@ -828,7 +830,7 @@ We observe (by drawing many more arrangements of three lines):
     are ordered. 
   \item Therefore for a given $x_i$ we only need to consider those
     $\lambda_j$ with $\xi_j < x_i$. (Or similar -- this is only
-    correct up to +- 1 -- I need to make this argumet here precise and
+    correct up to +- 1 -- I need to make this argument here precise and
     agree with the later source code).
   \item So in fact for $x_i$ we only need to consider those $\xi_j$ that we did
     not already consider for $x_{i-1}$, ie those that are between
@@ -836,7 +838,7 @@ We observe (by drawing many more arrangements of three lines):
   \item So we have two order lists of points $x_i$ and $\xi_j$
     respectively and we need to deal with all $x_{i-1} < \xi_j < x_i$
     before we can proceed to the next $x_{i+1}$.
-  \item This is faintly reminisence of the core idea of
+  \item This is faintly reminiscence of the core idea of
     \textsc{MergeSort} and \textsc{InversionCount} where we had to
     deal with to sorted list, but could only deal with the remaining
     smallest item in the one list when we had dealt with all smaller
@@ -849,20 +851,20 @@ We observe (by drawing many more arrangements of three lines):
   \frametitle{Finding $i$ fast with ideas from \textsc{MergeSort}}
   
   Core idea of going through the intersection points of both lists in
-  order. This is again a bit whooly, but the precises indices will
+  order. This is again a bit woolly, but the precises indices will
   come from debugging the implemented pseudo-code:
 
   So this is only a sketch:
   \begin{itemize}
   \item State with $i = 0$ and $j=0$.
   \item Compare $x_i$ and $\xi_j$. 
-  \item If $x_i$ is lower than $x_j$, calculate $l_i(x_i)$, and comapre to height
+  \item If $x_i$ is lower than $x_j$, calculate $l_i(x_i)$, and compare to height
     of $lambda_{j}$ at $x_i$. If $\lambda_{j}$ is higher than $l_i()$
     at this point, return $i$ -- the index of last visible line
     in. Otherwise increase $i$.
     \texttt{LEFT}.
   \item If $x_j$ is lower than $x_i$, increase $j$.
-  \item Repeat from the compare step, until all indicies are exhausted.
+  \item Repeat from the compare step, until all indices are exhausted.
   \end{itemize}
 \end{frame}
 
@@ -882,7 +884,7 @@ We observe (by drawing many more arrangements of three lines):
     and what its height is, namely $l_i(x_i) = l_{i+1}(x_i)$, but we
     also know which lines is uppermost at this point in
     \texttt{RIGHT}, say $k_j$. 
-  \item Similar to how ww dealt with the 3 lines (base?) case We can
+  \item Similar to how we dealt with the 3 lines (base?) case We can
     now compare $y_{L} = l_i(x_i)$ and $y_{R} = k_j(x_i)$. 
   \item If $y_{L} > y_{R}$, then $l_{i+1}$ is visible 
   \item and if $l_{i+1}$ is visible, so will be all $l_s$ with $s <
@@ -893,7 +895,7 @@ We observe (by drawing many more arrangements of three lines):
   \item However $k_{j-1}$ is certainly not visible because at $x_i$ is
     must be under $k_j$ (otherwise it would be the the uppermost in
     \texttt{RIGHT} at $x_i$, and there it is also under $x_i$, and a
-    forteriori under all $x_s, s < i$ as $k_{j-1}$ due to the greater
+    fortiori under all $x_s, s < i$ as $k_{j-1}$ due to the greater
     slope (ie less negative) will decay faster to $-\infty$, than any
     of $l_s, s \leq i$, ie also stay under $l_i$ and its predecessors.
   \item If $y_{L} < y_{R}$ at $x_i$ this means that $k_j$ is visible at least to the
